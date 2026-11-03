@@ -3,7 +3,7 @@ import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {transpileModule,ModuleKind,ScriptTarget} from 'typescript';
 mkdirSync('work',{recursive:true});
 writeFileSync('work/voice-media.mjs',transpileModule(readFileSync('lib/voice-media.ts','utf8'),{compilerOptions:{module:ModuleKind.ESNext,target:ScriptTarget.ES2022}}).outputText);
-const {bindCallTracks,setMicrophoneMuted}=await import('../work/voice-media.mjs');
+const {bindCallTracks,setMicrophoneMuted,canRestartCall}=await import('../work/voice-media.mjs');
 function peer(kinds=[]){const transceivers=[];const pc={getTransceivers:()=>transceivers,addTransceiver(kind){const t={receiver:{track:{kind}},direction:'recvonly',sender:{track:null,async replaceTrack(track){this.track=track}}};transceivers.push(t);return t}};kinds.forEach(k=>pc.addTransceiver(k));return pc}
 const audio={kind:'audio',enabled:true},screenA={kind:'video',id:'a'},screenB={kind:'video',id:'b'};
 const caller=peer();await bindCallTracks(caller,audio,screenA,true);assert.equal(caller.getTransceivers().length,2);
@@ -15,3 +15,11 @@ const late=peer(['audio','video']);await bindCallTracks(late,null,null);await bi
 setMicrophoneMuted({getAudioTracks:()=>[audio]},true);assert.equal(audio.enabled,false);setMicrophoneMuted({getAudioTracks:()=>[audio]},false);assert.equal(audio.enabled,true);
 setMicrophoneMuted(null,true);
 console.log('PASS: negotiated answerer senders, bidirectional screen replacement, late microphone, mute/unmute');
+
+assert.equal(canRestartCall('failed','stable',0,0,20000),true);
+assert.equal(canRestartCall('disconnected','stable',1,1000,20000),true);
+assert.equal(canRestartCall('failed','stable',2,0,20000),false);
+assert.equal(canRestartCall('connected','stable',0,0,20000),false);
+assert.equal(canRestartCall('failed','have-local-offer',0,0,20000),false);
+assert.equal(canRestartCall('failed','stable',1,15000,20000),false);
+console.log('PASS: bounded ICE recovery, backoff and negotiation collision avoidance');
