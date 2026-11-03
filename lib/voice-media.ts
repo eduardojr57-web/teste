@@ -8,3 +8,5 @@ export async function bindCallTracks(pc:RTCPeerConnection,audio:MediaStreamTrack
 }
 export function setMicrophoneMuted(stream:MediaStream|null,muted:boolean){stream?.getAudioTracks().forEach(t=>{t.enabled=!muted});}
 
+
+export function canRestartCall(state:string,signaling:string,attempts:number,lastAttempt:number,now:number){return ['failed','disconnected'].includes(state)&&signaling==='stable'&&attempts<2&&now-lastAttempt>=12000}
