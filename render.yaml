@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: conversa
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run check && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24.22.1"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: conversa-db
+          property: connectionString
+      - key: BOOTSTRAP_TOKEN
+        generateValue: true
+      - key: BACKUP_KEY
+        generateValue: true
+      - key: FREE_TIER
+        value: "true"
+      - key: FREE_DATABASE_EXPIRES_AT
+        sync: false
+      - key: STORAGE_LIMIT_MB
+        value: "40"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: TURN_URL
+        sync: false
+      - key: TURN_USERNAME
+        sync: false
+      - key: TURN_PASSWORD
+        sync: false
+databases:
+  - name: conversa-db
+    plan: free
+    databaseName: conversa
+    user: conversa
+    ipAllowList: []
