@@ -1,0 +1,3 @@
+import {spawn} from 'node:child_process';
+import {build} from 'esbuild';
+const child=spawn(process.execPath,['node_modules/vite/bin/vite.js','build'],{stdio:'inherit'});await new Promise((resolve,reject)=>child.on('exit',code=>code===0?resolve():reject(new Error('Build falhou'))));await build({entryPoints:['server/index.ts'],bundle:true,platform:'node',packages:'external',format:'esm',outfile:'dist/server.mjs'});const server=spawn(process.execPath,['--env-file-if-exists=.env','dist/server.mjs'],{stdio:'inherit',env:{...process.env,NODE_ENV:'development'}});for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>server.kill(sig));server.on('exit',code=>process.exit(code||0));
